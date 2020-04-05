@@ -1,75 +1,132 @@
 import java.util.Random;
 import javax.swing.JFrame;
 import java.awt.Dimension;
+import java.util.Stack;
+import java.util.EmptyStackException;
 
-
+//Deck is a deck of UNO cards that has a pickup pile that utilizes stack and a discard pile that is
+//an array of cards that will eventually be shuffled and turned into a pickup pile stack
 
 class Deck
 {
-	public Card[] cards;
-	final static int SIZE = 108;
-	
+	private int PSCursize; //Current size of Pickup stack
+	public Card[] DiscardPile;	//dicard pile card array
+	private int DPCursize;
+	final static int SIZE = 108; //max posible size pile
+	private Suit[] suits;
+	private TypeOfCard [] types;
+	private Stack<Card> PStack;
 
+//---------------------------------------------------------------------------------
+	//initialize the deck
 	public Deck()
 	{
-		cards = new Card[SIZE];
-		Suit[] suits = Suit.values();
-		TypeOfCard[] types = TypeOfCard.values();
+		DiscardPile = new Card[SIZE]; //just using discard pile to build PStack 
+		PSCursize = SIZE;
+		DPCursize = 0;			//real size of dicard pile is 0
+		suits = Suit.values();
+		types = TypeOfCard.values();
+		PStack = new Stack<Card>(); //Pickup Stack
 
 		//96 Cards made here
 		for(int t = 0; t < 12; t++)	//walking through the types enum (1 to draw 2)
 		{
 			for(int s = 0; s < suits.length-1; s++)	//walking through suits enum (red, blue, green, yellow)
 			{
-				cards[(8*(t))+(2*s)] = new Card(suits[s], types[t+1]);
-				cards[(8*(t))+(2*s)+1] = new Card(suits[s], types[t+1]);
+				DiscardPile[(8*(t))+(2*s)] = new Card(suits[s], types[t+1]);
+				DiscardPile[(8*(t))+(2*s)+1] = new Card(suits[s], types[t+1]);
 			}
 		}
 
 		//Making the 0's. There's only 4 zeroes as opposed to 8
-		cards[96] = new Card(Suit.RED, TypeOfCard.ZERO);
-		cards[97] = new Card(Suit.BLUE, TypeOfCard.ZERO);
-		cards[98] = new Card(Suit.GREEN, TypeOfCard.ZERO);
-		cards[99] = new Card(Suit.YELLOW, TypeOfCard.ZERO);
+		DiscardPile[96] = new Card(Suit.RED, TypeOfCard.ZERO);
+		DiscardPile[97] = new Card(Suit.BLUE, TypeOfCard.ZERO);
+		DiscardPile[98] = new Card(Suit.GREEN, TypeOfCard.ZERO);
+		DiscardPile[99] = new Card(Suit.YELLOW, TypeOfCard.ZERO);
 
 		//making wild cards
 		for(int i = 100; i < 104; i++)
 		{
-			cards[i] = new Card(Suit.WILD, TypeOfCard.SELECTCOLOR);
+			DiscardPile[i] = new Card(Suit.WILD, TypeOfCard.SELECTCOLOR);
 		}
 		for(int i = 104; i < 108; i++)
 		{
-			cards[i] = new Card(Suit.WILD, TypeOfCard.DRAW4WILD);
+			DiscardPile[i] = new Card(Suit.WILD, TypeOfCard.DRAW4WILD);
 		}
 
-		shuffle();
+		shuffle(SIZE); //shuffle array
+
+		for(int i=0; i<SIZE;i++) //put into stack
+			PStack.push(DiscardPile[i]);
+
 	}
+
+//Need to work on this one/may just get rid of it entirely
+//---------------------------------------------------------------------------------
 
 	public void printDeck()
 	{
-		for(int i = 0; i < SIZE; i++)
-		{
-			cards[i].printCard();
-		}
+		System.out.println(PSCursize);
 	}
 
-	public Card[] shuffle()
+
+//---------------------------------------------------------------------------------
+	public Card[] shuffle(int size)
 	{
-		Card[] shuffledDeck = new Card[SIZE];
+		Card[] shuffledDeck = new Card[size];
 		Card blank = new Card(Suit.WILD, TypeOfCard.ZERO);	//making a "blank" card to make sure we move every card
 
-		for(int i = 0; i < SIZE; i++)	//picking a random number and replacing it with a "blank" card to get a random order
+		for(int i = 0; i < size; i++)	//picking a random number and replacing it with a "blank" card to get a random order
 		{
 			Random r = new Random();
-			int rnum = r.nextInt(SIZE);
-			while(cards[rnum] == blank){
-				rnum = r.nextInt(SIZE);
+			int rnum = r.nextInt(size);
+			while(DiscardPile[rnum] == blank){
+				rnum = r.nextInt(size);
 			}
-			shuffledDeck[i] = cards[rnum];
-				cards[rnum] = blank;
+			shuffledDeck[i] = DiscardPile[rnum];
+				DiscardPile[rnum] = blank;
 		}
-		cards = shuffledDeck;
+		DiscardPile = shuffledDeck;
 		return shuffledDeck;
 	}
-	
+
+
+//---------------------------------------------------------------------------------
+	public Card PickupCard()
+	{
+		Card c = null;
+		try
+		{
+			c = PStack.pop();
+		}
+		catch(EmptyStackException e)
+		{
+			e.printStackTrace();
+		}
+		System.out.println(c.printCard() + "\n--"); 
+		return c;
+	}
+
+
+
+	//the discarded card will have to be removed from player hand
+	//before put into this function(it wont remove the card from hand).
+	//It puts the input card into discard pile.
+	public void DiscardCard(Card c)
+	{
+		DiscardPile[DPCursize++] = c;
+	}
+
+	public void DPtoPStack()
+	{
+		shuffle(DPCursize);
+		for(int i = 0; i<DPCursize; i++)
+			PStack.push(DiscardPile[i]);
+		PSCursize = DPCursize;	
+		DPCursize = 0;
+	}
+
+
+
+
 }
