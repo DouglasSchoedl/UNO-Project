@@ -71,6 +71,13 @@ class Deck
 
 
 //---------------------------------------------------------------------------------
+
+	public int StackSize()
+	{
+		return PSCursize;
+	}
+
+//---------------------------------------------------------------------------------
 	public Card[] shuffle(int size)
 	{
 		Card[] shuffledDeck = new Card[size];
@@ -98,12 +105,13 @@ class Deck
 		try
 		{
 			c = PStack.pop();
+			PSCursize--;
 		}
 		catch(EmptyStackException e)
 		{
 			e.printStackTrace();
 		}
-		System.out.println(c.printCard() + "\n--"); 
+	//	System.out.println(c.printCard() + "\n--"); 
 		return c;
 	}
 
