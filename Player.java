@@ -55,7 +55,20 @@ public abstract class Player
 		Collections.sort(Hand, new CardSort());
 	}
 
+	//returns a card for comparing
+	public final Card getCard(int index)
+	{
+		return Hand.get(index);
+	}
 
+	//deals 7 cards to player to populate their hand with cards
+	public void dealCards(Deck D)
+	{
+		for(int i = 0; i < 7; i++)
+		{
+			TakeCard(D);
+		}
+	}
 
 
 
