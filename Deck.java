@@ -81,17 +81,18 @@ class Deck
 	public Card[] shuffle(int size)
 	{
 		Card[] shuffledDeck = new Card[size];
-		Card blank = new Card(Suit.WILD, TypeOfCard.ZERO);	//making a "blank" card to make sure we move every card
 
-		for(int i = 0; i < size; i++)	//picking a random number and replacing it with a "blank" card to get a random order
+		for(int i = 0; i < size; i++)	//picking a random number and replacing it with null to get a random order
 		{
 			Random r = new Random();
 			int rnum = r.nextInt(size);
-			while(DiscardPile[rnum] == blank){
+			while(DiscardPile[rnum] == null)
+			{
 				rnum = r.nextInt(size);
 			}
+
 			shuffledDeck[i] = DiscardPile[rnum];
-				DiscardPile[rnum] = blank;
+			DiscardPile[rnum] = null;
 		}
 		DiscardPile = shuffledDeck;
 		return shuffledDeck;
@@ -134,7 +135,11 @@ class Deck
 		DPCursize = 0;
 	}
 
-
+//--------------------------------------------------------------------------------
+	public int DPsize()
+	{
+		return DPCursize;
+	}
 
 
 }
