@@ -18,9 +18,10 @@ public abstract class Player
 	}
 
 
-	//does not handle empty stack of cards need to cover that in gameplay
+	//now does handle empty stack of cards need to cover that in gameplay
 	public void TakeCard(Deck D)
 	{
+		D.ReshuffleIfEmpty();
 		Hand.add(D.PickupCard());
 		SortHand();
 	}
@@ -53,6 +54,11 @@ public abstract class Player
 	protected void SortHand()
 	{
 		Collections.sort(Hand, new CardSort());
+	}
+
+	protected int getPnum()
+	{	
+		return Pnum; 
 	}
 
 	//returns a card for comparing
