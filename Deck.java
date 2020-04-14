@@ -77,6 +77,12 @@ class Deck
 		return PSCursize;
 	}
 
+//--------------------------------------------------------------------------------
+	public int DPsize()
+	{
+		return DPCursize;
+	}
+
 //---------------------------------------------------------------------------------
 	public Card[] shuffle(int size)
 	{
@@ -117,7 +123,7 @@ class Deck
 	}
 
 
-
+//--------------------------------------------------------------------------------
 	//the discarded card will have to be removed from player hand
 	//before put into this function(it wont remove the card from hand).
 	//It puts the input card into discard pile.
@@ -126,6 +132,9 @@ class Deck
 		DiscardPile[DPCursize++] = c;
 	}
 
+
+//--------------------------------------------------------------------------------
+	//Moves and shuffles dicard pack to to Stack
 	public void DPtoPStack()
 	{
 		shuffle(DPCursize);
@@ -135,11 +144,26 @@ class Deck
 		DPCursize = 0;
 	}
 
+
 //--------------------------------------------------------------------------------
-	public int DPsize()
+	//checks to see if stack is empty
+	public boolean IsStackEmpty()
 	{
-		return DPCursize;
+		if(StackSize() == 0)
+			return true;
+		return false;
 	}
 
+
+//--------------------------------------------------------------------------------
+	//if stack is empty resuffles using DPtoPStack()
+	public void ReshuffleIfEmpty()
+	{
+		if(IsStackEmpty())
+		{
+			System.out.println("Reshuffling");
+			DPtoPStack();
+		}
+	}
 
 }
