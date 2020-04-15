@@ -6,7 +6,7 @@ public class Uno
 	private static int PSIZE = 2;	
 	private static Player [] player = new Player[PSIZE];
 	private static Card leading; //Top of discard pile
-
+	private static Card Wtemp;	//temp for wild card color choice
 
 	public static void main(String[] args)
 	{
@@ -22,7 +22,7 @@ public class Uno
 		//Leading with the first card from the pickup stack. This is 3 lines for printing for testing
 		leading = d.PickupCard();			//picking up the leading card in the PStack
 		d.DiscardCard(leading);					//putting the card into the discard pile
-		
+
 		while(leading.getSuit() == Suit.WILD)	//leading card cannot be wild
 		{
 			leading = d.PickupCard();
@@ -37,9 +37,11 @@ public class Uno
 		//while neither is out of cards, loop for testing
 		while(player[index].NumCardsInHand() != 0)
 		{
-		
+
 			player[index].ShowHand();
 			leading = d.DiscardPile[d.DPsize()-1];
+			if(leading.getSuit() == Suit.WILD)	//if wild
+				leading = Wtemp;
 			System.out.println(player[index].NumCardsInHand());
 			System.out.println("DiscardTop: " + leading.printCard());	
 			System.out.printf("Player %d, play a card or put -1 to draw.\n>", player[index].getPnum());
@@ -50,15 +52,21 @@ public class Uno
 				DrawUntilPlayable(player[index],d,leading);
 				continue;
 			}
-			
+
+		
 			//testing the players choice vs. the top card of discard stack
 			if(!isDiscardable(leading, player[index].getCard(choice)))
 			{
 				System.out.println("That card cannot be played. Please choose another card.");
 				continue;	
 			}
-			
-			if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
+
+			if(player[index].getCard(choice).getType() == TypeOfCard.SKIP)
+			{
+				player[index].Discard(d, choice);
+				index = Skip(index);	
+			}
+			else if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
 			{
 				player[index].Discard(d, choice);
 				Reverse(index);	
@@ -72,7 +80,7 @@ public class Uno
 					player[index].Discard(d, choice);
 					index = NextTurn(index);
 					hasdrawtwo = false;
-					
+
 					for(int i = 0; i<player[index].NumCardsInHand(); i++)
 					{
 						if(player[index].getCard(i).getType() == TypeOfCard.DRAW2)
@@ -88,7 +96,7 @@ public class Uno
 
 						System.out.printf("Will player %d play another draw two?\n", player[index].getPnum());		
 						System.out.print("If yes, select the card, otherwise choose -1.\n>");	
-						
+
 						while(true)
 						{
 							choice = input.nextInt();
@@ -99,17 +107,28 @@ public class Uno
 							else
 								break;
 						}
-					
+
 						if(choice != -1)
 							numdrawtwos++;
 					}
 					else
 						break;
-					
+
 					if(choice == -1)
 						break;
 				}
 				DrawTwos(player[index], d, numdrawtwos);
+			}
+			else if(player[index].getCard(choice).getType() == TypeOfCard.SELECTCOLOR)
+			{
+				player[index].Discard(d, choice);
+				Wtemp = Wild(input, TypeOfCard.SELECTCOLOR);
+			}
+			else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW4WILD)
+			{
+				player[index].Discard(d, choice);
+				index = NextTurn(index);
+				Wtemp = WildDrawFour(input, player[index],d);
 			}
 			else
 				player[index].Discard(d, choice);
@@ -120,12 +139,12 @@ public class Uno
 				break;
 
 			index = NextTurn(index);
-			
+
 
 		}
 	}
 
-	
+
 	//-----------------------------------------------------------------------------
 	//tests if a card is able to be played based on rules of the game
 	public static boolean isDiscardable(Card top, Card test)
@@ -143,7 +162,7 @@ public class Uno
 
 	}
 
-		
+
 	//-----------------------------------------------------------------------------
 	public static int NextTurn(int index)
 	{
@@ -152,6 +171,43 @@ public class Uno
 		else
 			index++;
 		return index;
+	}
+
+
+	//-----------------------------------------------------------------------------
+	public static Card Wild(Scanner sc, TypeOfCard t)
+	{
+		Card temp = null;
+		int i;
+		System.out.println("Choose Color: 0=Red, 1=Yellow, 2=Green, 3=Blue.");
+		while(true)
+		{
+			i = sc.nextInt();
+			if(i<4 & i>=0)
+				break;
+			else
+			{
+				System.out.println("Not Valid Choice.");
+				System.out.println("Choose Color: 0=Red, 1=Yellow, 2=Green, 3=Blue.");
+			}
+		}
+		switch(i)
+		{
+			case 0: temp = new Card(Suit.RED, t); break;
+			case 1: temp = new Card(Suit.YELLOW, t); break;
+			case 2: temp = new Card(Suit.GREEN, t); break;
+			case 3: temp = new Card(Suit.BLUE, t); break;
+		}
+		return temp;
+	}
+
+
+	//-----------------------------------------------------------------------------
+	public static Card WildDrawFour(Scanner sc, Player p, Deck D)
+	{
+		Card temp = Wild(sc, TypeOfCard.DRAW4WILD);
+		DrawTwos(p,D,2);
+		return temp;
 	}
 
 
@@ -174,9 +230,8 @@ public class Uno
 		}
 	}
 
-	//-----------------------------------------------------------------------------
-	
 
+	//-----------------------------------------------------------------------------
 	//a bit overly complicated but reverse player array starting at the index
 	//Example {0,1,2,3} at index 2 -> {0,3,2,1}
 	//So player 2 plays reverse then the next is player 1 then 0 then..
@@ -205,6 +260,15 @@ public class Uno
 		temp[i] = player[index];
 
 		player = temp;
+	}
+
+
+	//-----------------------------------------------------------------------------
+	public static int Skip(int index)
+	{
+		index = NextTurn(index);
+		System.out.printf("Player %d was skipped!\n", player[index].getPnum());
+		return index;
 	}
 
 
