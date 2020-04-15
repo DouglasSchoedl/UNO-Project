@@ -40,6 +40,7 @@ public class Uno
 		
 			player[index].ShowHand();
 			leading = d.DiscardPile[d.DPsize()-1];
+			System.out.println(player[index].NumCardsInHand());
 			System.out.println("DiscardTop: " + leading.printCard());	
 			System.out.printf("Player %d, play a card or put -1 to draw.\n>", player[index].getPnum());
 
@@ -57,17 +58,58 @@ public class Uno
 				continue;	
 			}
 			
-			if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE)
+			if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
 			{
 				player[index].Discard(d, choice);
 				Reverse(index);	
 			}		
-			else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW2)
+			else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW2) //Draw2 Block
 			{
-				player[index].Discard(d, choice);
-				index = NextTurn(index);
-				DrawTwo(player[index],d);
-				System.out.printf("Player %d, had to draw 2 and lost a turn\n", player[index].getPnum());
+				int numdrawtwos = 1;
+				boolean hasdrawtwo;
+				while(true)
+				{
+					player[index].Discard(d, choice);
+					index = NextTurn(index);
+					hasdrawtwo = false;
+					
+					for(int i = 0; i<player[index].NumCardsInHand(); i++)
+					{
+						if(player[index].getCard(i).getType() == TypeOfCard.DRAW2)
+							hasdrawtwo = true;
+					}
+
+					if(hasdrawtwo)
+					{
+						player[index].ShowHand();
+						leading = d.DiscardPile[d.DPsize()-1];
+						System.out.println(player[index].NumCardsInHand());
+						System.out.println("DiscardTop: " + leading.printCard());	
+
+						System.out.printf("Will player %d play another draw two?\n", player[index].getPnum());		
+						System.out.print("If yes, select the card, otherwise choose -1.\n>");	
+						
+						while(true)
+						{
+							choice = input.nextInt();
+							if(choice == -1)
+								break;
+							else if(!isDiscardable(leading, player[index].getCard(choice)))
+								System.out.print("That card is not a draw two.\n>");	
+							else
+								break;
+						}
+					
+						if(choice != -1)
+							numdrawtwos++;
+					}
+					else
+						break;
+					
+					if(choice == -1)
+						break;
+				}
+				DrawTwos(player[index], d, numdrawtwos);
 			}
 			else
 				player[index].Discard(d, choice);
@@ -118,17 +160,17 @@ public class Uno
 
 	//-----------------------------------------------------------------------------
 	//Have to add wait functionallity to allow for multiple drawtwo's
-	public static void DrawTwo(Player pnum, Deck D)
+	public static void DrawTwo(Player p, Deck D)
 	{
-		pnum.TakeCard(D);
-		pnum.TakeCard(D);
+		p.TakeCard(D);
+		p.TakeCard(D);
 	}
-	public static void DrawTwos(Player pnum, Deck D, int numdrawtwos)
+	public static void DrawTwos(Player p, Deck D, int numdrawtwos)
 	{
-		System.out.printf("Player %d had to draw %d cards!", pnum.getPnum(), (numdrawtwos*2));
+		System.out.printf("Player %d had to draw %d cards and lost a turn!\n", p.getPnum(), (numdrawtwos*2));
 		while(numdrawtwos-- != 0)
 		{
-			DrawTwo(pnum, D);
+			DrawTwo(p, D);
 		}
 	}
 
