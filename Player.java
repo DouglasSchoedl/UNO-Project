@@ -47,7 +47,7 @@ public abstract class Player
 	{
 		for(int i=0; i<Hand.size();i++)
 		{
-			System.out.println(Hand.get(i).printCard());
+			System.out.println(i + " " + Hand.get(i).printCard());
 		}
 	}
 

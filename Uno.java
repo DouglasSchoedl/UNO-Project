@@ -23,15 +23,30 @@ public class Uno
 		leading = d.PickupCard();			//picking up the leading card in the PStack
 		d.DiscardCard(leading);					//putting the card into the discard pile
 
-		while(leading.getSuit() == Suit.WILD)	//leading card cannot be wild
+		while(leading.getSuit() == Suit.WILD)	//first leading card cannot be wild
 		{
 			leading = d.PickupCard();
 			d.DiscardCard(leading); 
 		}
-
-		System.out.println("the first card is: " + leading.printCard());
+		
+		System.out.println("The first card is: " + leading.printCard());
 		int index = 0;	//start with player 1
 		Scanner input = new Scanner(System.in);
+
+		//for Skip, Reverse, and Draw2 first leading card
+		if(leading.getType() == TypeOfCard.SKIP)
+		{
+			index = Skip(index);
+		}
+		else if(leading.getType() == TypeOfCard.REVERSE)
+		{
+			Reverse(index);
+		}
+		else if(leading.getType() == TypeOfCard.DRAW2) //no stacking draw2's for first card
+		{
+			System.out.println("Unlucky, first card was a draw 2 and loss of turn.");
+			DrawTwo(player[index++], d);
+		}	
 
 
 		//while neither is out of cards, loop for testing
@@ -42,7 +57,9 @@ public class Uno
 			leading = d.DiscardPile[d.DPsize()-1];
 			if(leading.getSuit() == Suit.WILD)	//if wild
 				leading = Wtemp;
-			System.out.println(player[index].NumCardsInHand());
+			System.out.println("Total Cards: " + player[index].NumCardsInHand());
+
+
 			System.out.println("DiscardTop: " + leading.printCard());	
 			System.out.printf("Player %d, play a card or put -1 to draw.\n>", player[index].getPnum());
 
@@ -91,7 +108,7 @@ public class Uno
 					{
 						player[index].ShowHand();
 						leading = d.DiscardPile[d.DPsize()-1];
-						System.out.println(player[index].NumCardsInHand());
+						System.out.println("Total Cards: " + player[index].NumCardsInHand());
 						System.out.println("DiscardTop: " + leading.printCard());	
 
 						System.out.printf("Will player %d play another draw two?\n", player[index].getPnum());		
@@ -136,12 +153,16 @@ public class Uno
 
 
 			if(player[index].NumCardsInHand() == 0)	//this triggers if player[i] played last card
+			{
+				System.out.printf("Player %d wins!\n",player[index].getPnum());
 				break;
-
-			index = NextTurn(index);
-
-
+			}
+			else
+				index = NextTurn(index);
 		}
+
+		
+
 	}
 
 
@@ -172,6 +193,21 @@ public class Uno
 			index++;
 		return index;
 	}
+
+
+	//-----------------------------------------------------------------------------
+	//make this into a button that only appears at 2 cards
+	//When clicked returns value true
+//	public static boolean SayUno(Scanner sc, Player p)
+//	{
+//	}
+	
+
+	//Button given to other players if one player dosnt announce uno and has it
+//	public static boolean CallNoUno();
+//  {
+//  }
+
 
 
 	//-----------------------------------------------------------------------------
