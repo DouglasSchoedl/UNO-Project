@@ -134,14 +134,18 @@ class Deck
 
 
 //--------------------------------------------------------------------------------
-	//Moves and shuffles dicard pack to to Stack
+	//Moves and shuffles dicard pack to to Stack	
+	//Top of discard pile will remain in discard pile
 	public void DPtoPStack()
 	{
-		shuffle(DPCursize);
-		for(int i = 0; i<DPCursize; i++)
+		Card DiscTop = DiscardPile[DPCursize-1];
+		shuffle(DPCursize-1);
+		for(int i = 0; i<DPCursize-1; i++)
 			PStack.push(DiscardPile[i]);
-		PSCursize = DPCursize;	
-		DPCursize = 0;
+
+		DiscardPile[0] = DiscTop; //Top of disc pile remains
+		PSCursize = DPCursize-1;	
+		DPCursize = 1;
 	}
 
 
