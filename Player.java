@@ -19,11 +19,13 @@ public abstract class Player
 
 
 	//now does handle empty stack of cards need to cover that in gameplay
-	public void TakeCard(Deck D)
+	public Card TakeCard(Deck D)
 	{
 		D.ReshuffleIfEmpty();
-		Hand.add(D.PickupCard());
+		Card pickup = D.PickupCard();
+		Hand.add(pickup);
 		SortHand();
+		return pickup;
 	}
 
 
