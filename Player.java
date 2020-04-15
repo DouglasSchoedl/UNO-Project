@@ -58,11 +58,6 @@ public abstract class Player
 		Collections.sort(Hand, new CardSort());
 	}
 
-	protected int getHandSize()
-	{
-		return Hand.size();
-	}
-
 	protected int getPnum()
 	{	
 		return Pnum; 
