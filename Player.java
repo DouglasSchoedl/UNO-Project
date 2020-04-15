@@ -22,10 +22,10 @@ public abstract class Player
 	public Card TakeCard(Deck D)
 	{
 		D.ReshuffleIfEmpty();
-		Card temp = D.PickupCard();
-		Hand.add(temp);
+		Card pickup = D.PickupCard();
+		Hand.add(pickup);
 		SortHand();
-		return temp;
+		return pickup;
 	}
 
 
