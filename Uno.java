@@ -1,17 +1,28 @@
-import java.util.Scanner;
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.awt.event.*;
 
-public class Uno
+public class Uno extends JFrame
 {
+	protected BorderLayout layout;
+	protected HandPanel hand;	//for displaying the cards in a player's hand
+	protected CardPane leadingPane;	//leading card in discard stack
+
 	private static Deck d;
 	private static int PSIZE = 2;	
 	private static Player [] player = new Player[PSIZE];
 	private static Card leading; //Top of discard pile
+	private static Uno frame;
+	private static int index;	//index is current player
 	private static Card Wtemp;	//temp for wild card color choice
 
 	public static void main(String[] args)
 	{
 		//Creating Deck of cards and the two players
 		d = new Deck();
+		index = 0;	//start with player 0
 
 		for(int i=0; i<PSIZE; i++)
 		{
@@ -29,9 +40,12 @@ public class Uno
 			d.DiscardCard(leading); 
 		}
 		
-		System.out.println("The first card is: " + leading.printCard());
-		int index = 0;	//start with player 1
-		Scanner input = new Scanner(System.in);
+		//GUI Frame
+		frame = new Uno(leading);	//passing in first card
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(900, 600);
+		frame.setVisible(true);
+		
 
 		//for Skip, Reverse, and Draw2 first leading card
 		if(leading.getType() == TypeOfCard.SKIP)
@@ -47,125 +61,70 @@ public class Uno
 			System.out.println("Unlucky, first card was a draw 2 and loss of turn.");
 			DrawTwo(player[index++], d);
 		}	
-
-
-		//while neither is out of cards, loop for testing
-		while(player[index].NumCardsInHand() != 0)
-		{
-
-			player[index].ShowHand();
-			leading = d.DiscardPile[d.DPsize()-1];
-			if(leading.getSuit() == Suit.WILD)	//if wild
-				leading = Wtemp;
-			System.out.println("Total Cards: " + player[index].NumCardsInHand());
-
-
-			System.out.println("DiscardTop: " + leading.printCard());	
-			System.out.printf("Player %d, play a card or put -1 to draw.\n>", player[index].getPnum());
-
-			int choice = input.nextInt();
-			if(choice == -1)
-			{
-				DrawUntilPlayable(player[index],d,leading);
-				continue;
-			}
-
-		
-			//testing the players choice vs. the top card of discard stack
-			if(!isDiscardable(leading, player[index].getCard(choice)))
-			{
-				System.out.println("That card cannot be played. Please choose another card.");
-				continue;	
-			}
-
-			if(player[index].getCard(choice).getType() == TypeOfCard.SKIP)
-			{
-				player[index].Discard(d, choice);
-				index = Skip(index);	
-			}
-			else if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
-			{
-				player[index].Discard(d, choice);
-				Reverse(index);	
-			}		
-			else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW2) //Draw2 Block
-			{
-				int numdrawtwos = 1;
-				boolean hasdrawtwo;
-				while(true)
-				{
-					player[index].Discard(d, choice);
-					index = NextTurn(index);
-					hasdrawtwo = false;
-
-					for(int i = 0; i<player[index].NumCardsInHand(); i++)
-					{
-						if(player[index].getCard(i).getType() == TypeOfCard.DRAW2)
-							hasdrawtwo = true;
-					}
-
-					if(hasdrawtwo)
-					{
-						player[index].ShowHand();
-						leading = d.DiscardPile[d.DPsize()-1];
-						System.out.println("Total Cards: " + player[index].NumCardsInHand());
-						System.out.println("DiscardTop: " + leading.printCard());	
-
-						System.out.printf("Will player %d play another draw two?\n", player[index].getPnum());		
-						System.out.print("If yes, select the card, otherwise choose -1.\n>");	
-
-						while(true)
-						{
-							choice = input.nextInt();
-							if(choice == -1)
-								break;
-							else if(!isDiscardable(leading, player[index].getCard(choice)))
-								System.out.print("That card is not a draw two.\n>");	
-							else
-								break;
-						}
-
-						if(choice != -1)
-							numdrawtwos++;
-					}
-					else
-						break;
-
-					if(choice == -1)
-						break;
-				}
-				DrawTwos(player[index], d, numdrawtwos);
-			}
-			else if(player[index].getCard(choice).getType() == TypeOfCard.SELECTCOLOR)
-			{
-				player[index].Discard(d, choice);
-				Wtemp = Wild(input, TypeOfCard.SELECTCOLOR);
-			}
-			else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW4WILD)
-			{
-				player[index].Discard(d, choice);
-				index = NextTurn(index);
-				Wtemp = WildDrawFour(input, player[index],d);
-			}
-			else
-				player[index].Discard(d, choice);
-
-
-
-			if(player[index].NumCardsInHand() == 0)	//this triggers if player[i] played last card
-			{
-				System.out.printf("Player %d wins!\n",player[index].getPnum());
-				break;
-			}
-			else
-				index = NextTurn(index);
-		}
-
-		
-
+		//end main
+		//most game logic was moved to MouseClickHandler
 	}
 
+	//-----------------------------------------------------------------------------
+	public Uno(Card top)	//top is the top card in discard stack
+	{
+		super("Uno");
+		layout = new BorderLayout();
+		setLayout(layout);
 
+		hand = new HandPanel(makeHand());
+		add(hand, BorderLayout.SOUTH);
+		leadingPane = makeCard(top);
+		add(leadingPane, BorderLayout.CENTER);
+		
+	}
+
+	//-----------------------------------------------------------------------------
+	//helper function for turning a Card obj into a CardPane
+	public CardPane makeCard(Card c)
+	{
+		return new CardPane(c);
+	}
+
+	//-----------------------------------------------------------------------------
+	//makes a handpanel
+	public ArrayList<CardPane> makeHand()
+	{
+		ArrayList<CardPane> hand = new ArrayList<CardPane>();
+		for(int i = 0; i < player[index].NumCardsInHand(); i++)
+		{
+			hand.add(makeCard(player[index].getCard(i)));
+		}
+		return hand;
+	}
+
+	//-----------------------------------------------------------------------------
+	public void nextPlayer()	//changes the cards shown for each player's turn
+	{
+		remove(hand);	//remove the old HandPanel to replace it with the new player's hand
+
+		if((index+1 >= PSIZE))	//increment to next player, if last player,
+			index = 0;			//go back to player 0
+		else
+			index++;
+
+		hand = new HandPanel(makeHand());	//link handpanel to new player's hand
+		add(hand, BorderLayout.SOUTH);
+		validate();		//update the frame
+	}
+
+	//-----------------------------------------------------------------------------
+	//similar function to changePlayer. This time changing the top card instead of hand
+	public void changeDiscardTop(Card c)
+	{
+		leading = c;
+
+		remove(leadingPane);
+		leadingPane = makeCard(c);
+		add(leadingPane, BorderLayout.CENTER);
+		validate();	
+	}
+	
 	//-----------------------------------------------------------------------------
 	//tests if a card is able to be played based on rules of the game
 	public static boolean isDiscardable(Card top, Card test)
@@ -209,7 +168,8 @@ public class Uno
 //  }
 
 
-
+/* Commenting out Wild logic for now since just so it compiles. will have to add some UI elements for selecting 
+ * desired color later
 	//-----------------------------------------------------------------------------
 	public static Card Wild(Scanner sc, TypeOfCard t)
 	{
@@ -245,7 +205,7 @@ public class Uno
 		DrawTwos(p,D,2);
 		return temp;
 	}
-
+*/
 
 
 
@@ -320,6 +280,119 @@ public class Uno
 	}
 
 
-	//-----------------------------------------------------------------------------
+	//---------------------------------------------------------------------------------------------------------
+	//HandPanel inner class for displaying a list of cards
+	class HandPanel extends JPanel
+	{
+		GridLayout layout;
+		ArrayList<CardPane> hand;	//stores the array of cardPanes that are displayed
+
+		public HandPanel(ArrayList<CardPane> h)
+		{
+			super();
+			hand = h;
+			layout = new GridLayout(1,1);
+			setLayout(layout);
+			
+			for(int i = 0; i < hand.size(); i++)
+			{
+				add(hand.get(i));
+				hand.get(i).addMouseListener(new MouseClickHandler());
+			}
+		}
+
+		private class MouseClickHandler extends MouseAdapter
+		{
+			public void mouseClicked(MouseEvent event)
+			{
+				CardPane clicked = (CardPane)(event.getComponent());	
+				//downcasts component clicked to a CardPane
+				Card played = clicked.getCard(); 	//cardpane clicked converted to card object
+				int choice = player[index].findCardIndex(played);
+
+				if(!isDiscardable(leading, played))
+				{
+					System.out.println("That card cannot be played. Please choose another card.");
+					return;
+				}
+
+				if(player[index].getCard(choice).getType() == TypeOfCard.SKIP)
+			{
+				player[index].Discard(d, choice);
+				index = Skip(index);	
+			}
+			else if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
+			{
+				player[index].Discard(d, choice);
+				Reverse(index);	
+			}		
+			else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW2) //Draw2 Block
+			{
+				int numdrawtwos = 1;
+				boolean hasdrawtwo;
+				while(true)
+				{
+					player[index].Discard(d, choice);
+					index = NextTurn(index);
+					hasdrawtwo = false;
+
+					for(int i = 0; i<player[index].NumCardsInHand(); i++)
+					{
+						if(player[index].getCard(i).getType() == TypeOfCard.DRAW2)
+							hasdrawtwo = true;
+					}
+
+					if(hasdrawtwo)
+					{
+						player[index].ShowHand();
+						leading = d.DiscardPile[d.DPsize()-1];
+						System.out.println("Total Cards: " + player[index].NumCardsInHand());
+						System.out.println("DiscardTop: " + leading.printCard());	
+
+						System.out.printf("Will player %d play another draw two?\n", player[index].getPnum());		
+						System.out.print("If yes, select the card, otherwise choose -1.\n>");	
+
+						while(true)
+						{
+							choice = 0;	//was choice = input.nextInt()
+							if(choice == -1)
+								break;
+							else if(!isDiscardable(leading, player[index].getCard(choice)))
+								System.out.print("That card is not a draw two.\n>");	
+							else
+								break;
+						}
+
+						if(choice != -1)
+							numdrawtwos++;
+					}
+					else
+						break;
+
+					if(choice == -1)
+						break;
+				}
+				DrawTwos(player[index], d, numdrawtwos);
+			}
+			else
+				player[index].Discard(d, player[index].findCardIndex(played));
+
+			if(player[index].NumCardsInHand() == 0)	//this triggers if player[i] played last card
+			{
+				System.out.printf("Player %d wins!\n",player[index].getPnum());
+				return;
+			}
+			else
+				nextPlayer();
+
+				//player[index].Discard(d, player[index].findCardIndex(played));	//discard card from player's hand
+				changeDiscardTop(played);		//update the top card Component
+				//nextPlayer();	//switch to next player.
+			}
+		}
+
+	}
+	
+}
 
 }
