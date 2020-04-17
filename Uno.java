@@ -394,5 +394,3 @@ public class Uno extends JFrame
 	}
 	
 }
-
-}
