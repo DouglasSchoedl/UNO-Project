@@ -78,7 +78,18 @@ public abstract class Player
 		}
 	}
 
-
+	//searches a player's hand for a card and returns the index
+	public int findCardIndex(Card c)
+	{
+		int index = 0;
+		for(int i = 0; i < Hand.size(); i++)
+		{
+			int order = c.compareTo(Hand.get(i));
+			if(order == 0)	//if order == 0, they are the same and so the card was found.
+				index = i;
+		}
+		return index;
+	}
 
 
 
