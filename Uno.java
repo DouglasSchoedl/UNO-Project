@@ -390,7 +390,5 @@ public class Uno extends JFrame
 				//nextPlayer();	//switch to next player.
 			}
 		}
-
-	}
-	
+	}	
 }
