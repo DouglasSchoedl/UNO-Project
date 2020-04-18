@@ -324,7 +324,7 @@ public class Uno extends JFrame
 			
 			for(int i = 0; i < hand.size(); i++)
 			{
-				add(hand.get(i));
+				cardgrid.add(hand.get(i));
 				hand.get(i).addMouseListener(new MouseClickHandler());
 			}
 			add(cardgrid);
