@@ -22,7 +22,7 @@ class CardPane extends JPanel
 		cardFileName = card.getSuit().toString() + card.getType().toString() + ".png";
 
 		JLabel cardlabel = new JLabel();
-		Icon card = new ImageIcon(getClass().getResource(cardFileName));
+		Icon card = new ImageIcon(getClass().getResource("images/" + cardFileName));
 		cardlabel.setIcon(card);
 		cardlabel.setHorizontalAlignment(SwingConstants.CENTER);
 		add(cardlabel);
