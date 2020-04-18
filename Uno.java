@@ -6,9 +6,10 @@ import java.awt.event.*;
 
 public class Uno extends JFrame
 {
-	protected BorderLayout layout;
+	protected static BorderLayout layout;
 	protected HandPanel hand;	//for displaying the cards in a player's hand
 	protected CardPane leadingPane;	//leading card in discard stack
+	protected static JTextArea console;
 
 	private static Deck d;
 	private static int PSIZE = 2;	
@@ -76,7 +77,12 @@ public class Uno extends JFrame
 		add(hand, BorderLayout.SOUTH);
 		leadingPane = makeCard(top);
 		add(leadingPane, BorderLayout.CENTER);
-		
+		console = new JTextArea(30, 16);
+		console.setEditable(false);
+		console.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+		console.setLineWrap(true);
+		console.setWrapStyleWord(true);
+		add(console, BorderLayout.EAST);
 	}
 
 	//-----------------------------------------------------------------------------
@@ -114,7 +120,7 @@ public class Uno extends JFrame
 	}
 
 	//-----------------------------------------------------------------------------
-	//similar function to changePlayer. This time changing the top card instead of hand
+	//changing the top card
 	public void changeDiscardTop(Card c)
 	{
 		leading = c;
@@ -123,6 +129,16 @@ public class Uno extends JFrame
 		leadingPane = makeCard(c);
 		add(leadingPane, BorderLayout.CENTER);
 		validate();	
+	}
+	
+	//-----------------------------------------------------------------------------
+	//refreshes HandPanel
+	public void refreshHand()
+	{
+		remove(hand);	//remove the old HandPanel to replace it with the new player's hand
+		hand = new HandPanel(makeHand());	//link handpanel to new player's hand
+		add(hand, BorderLayout.SOUTH);
+		validate();		//update the frame
 	}
 	
 	//-----------------------------------------------------------------------------
@@ -264,6 +280,7 @@ public class Uno extends JFrame
 	{
 		index = NextTurn(index);
 		System.out.printf("Player %d was skipped!\n", player[index].getPnum());
+		console.append("Player " + player[index].getPnum() + " was skipped!\n");
 		return index;
 	}
 
@@ -284,20 +301,53 @@ public class Uno extends JFrame
 	//HandPanel inner class for displaying a list of cards
 	class HandPanel extends JPanel
 	{
-		GridLayout layout;
 		ArrayList<CardPane> hand;	//stores the array of cardPanes that are displayed
+		JPanel cardgrid;
+		JLabel playerLabel;
+		PlayerPanel playerpanel;	//holds player label and draw button
+		JButton drawButton;
 
 		public HandPanel(ArrayList<CardPane> h)
 		{
 			super();
 			hand = h;
-			layout = new GridLayout(1,1);
-			setLayout(layout);
+			
+			setLayout(new BorderLayout());	//Borderlayout to store hand and Label for which player
+			
+			cardgrid = new JPanel();		//card grid shows cards
+			cardgrid.setLayout(new GridLayout(1,1));		//set cardgrid layout to gridlayout
+			cardgrid.setBorder(BorderFactory.createLoweredBevelBorder());	//border around cards
+			
+			playerpanel = new PlayerPanel();
 			
 			for(int i = 0; i < hand.size(); i++)
 			{
 				add(hand.get(i));
 				hand.get(i).addMouseListener(new MouseClickHandler());
+			}
+			add(cardgrid);
+			add(playerpanel, BorderLayout.NORTH);
+		}
+
+		private class PlayerPanel extends JPanel implements ActionListener
+		{
+			public PlayerPanel()
+			{
+				super();
+				setLayout(new FlowLayout());
+				playerLabel = new JLabel("Player " + player[index].getPnum());
+				add(playerLabel);
+				drawButton = new JButton("Draw Card");
+				drawButton.addActionListener(this);
+				add(drawButton);
+			}
+
+			public void actionPerformed(ActionEvent event)
+			{
+				DrawUntilPlayable(player[index], d, leading);	//draw cards
+
+				//refresh the hand
+				refreshHand();
 			}
 		}
 
@@ -313,81 +363,82 @@ public class Uno extends JFrame
 				if(!isDiscardable(leading, played))
 				{
 					System.out.println("That card cannot be played. Please choose another card.");
+					console.append("That card cannot be player. Please choose another card.\n");
 					return;
 				}
 
 				if(player[index].getCard(choice).getType() == TypeOfCard.SKIP)
-			{
-				player[index].Discard(d, choice);
-				index = Skip(index);	
-			}
-			else if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
-			{
-				player[index].Discard(d, choice);
-				Reverse(index);	
-			}		
-			else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW2) //Draw2 Block
-			{
-				int numdrawtwos = 1;
-				boolean hasdrawtwo;
-				while(true)
 				{
 					player[index].Discard(d, choice);
-					index = NextTurn(index);
-					hasdrawtwo = false;
-
-					for(int i = 0; i<player[index].NumCardsInHand(); i++)
+					index = Skip(index);	
+				}
+				else if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
+				{
+					player[index].Discard(d, choice);
+					Reverse(index);	
+				}		
+				else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW2) //Draw2 Block
+				{
+					int numdrawtwos = 1;
+					boolean hasdrawtwo;
+					while(true)
 					{
-						if(player[index].getCard(i).getType() == TypeOfCard.DRAW2)
-							hasdrawtwo = true;
-					}
+						player[index].Discard(d, choice);
+						index = NextTurn(index);
+						hasdrawtwo = false;
 
-					if(hasdrawtwo)
-					{
-						player[index].ShowHand();
-						leading = d.DiscardPile[d.DPsize()-1];
-						System.out.println("Total Cards: " + player[index].NumCardsInHand());
-						System.out.println("DiscardTop: " + leading.printCard());	
-
-						System.out.printf("Will player %d play another draw two?\n", player[index].getPnum());		
-						System.out.print("If yes, select the card, otherwise choose -1.\n>");	
-
-						while(true)
+						for(int i = 0; i<player[index].NumCardsInHand(); i++)
 						{
-							choice = 0;	//was choice = input.nextInt()
-							if(choice == -1)
-								break;
-							else if(!isDiscardable(leading, player[index].getCard(choice)))
-								System.out.print("That card is not a draw two.\n>");	
-							else
-								break;
+							if(player[index].getCard(i).getType() == TypeOfCard.DRAW2)
+								hasdrawtwo = true;
 						}
 
-						if(choice != -1)
-							numdrawtwos++;
+						if(hasdrawtwo)
+						{
+							player[index].ShowHand();
+							leading = d.DiscardPile[d.DPsize()-1];
+							System.out.println("Total Cards: " + player[index].NumCardsInHand());
+							System.out.println("DiscardTop: " + leading.printCard());	
+
+							System.out.printf("Will player %d play another draw two?\n", player[index].getPnum());		
+							System.out.print("If yes, select the card, otherwise choose -1.\n>");	
+
+							while(true)
+							{
+								choice = 0;	//was choice = input.nextInt()
+								if(choice == -1)
+									break;
+								else if(!isDiscardable(leading, player[index].getCard(choice)))
+									System.out.print("That card is not a draw two.\n>");	
+								else
+									break;
+							}
+
+							if(choice != -1)
+								numdrawtwos++;
+						}
+						else
+							break;
+
+						if(choice == -1)
+							break;
 					}
-					else
-						break;
-
-					if(choice == -1)
-						break;
+					DrawTwos(player[index], d, numdrawtwos);
 				}
-				DrawTwos(player[index], d, numdrawtwos);
-			}
-			else
-				player[index].Discard(d, player[index].findCardIndex(played));
+				else
+					player[index].Discard(d, player[index].findCardIndex(played));
 
-			if(player[index].NumCardsInHand() == 0)	//this triggers if player[i] played last card
-			{
-				System.out.printf("Player %d wins!\n",player[index].getPnum());
-				return;
-			}
-			else
-				nextPlayer();
-
-				//player[index].Discard(d, player[index].findCardIndex(played));	//discard card from player's hand
-				changeDiscardTop(played);		//update the top card Component
-				//nextPlayer();	//switch to next player.
+				if(player[index].NumCardsInHand() == 0)	//this triggers if player[i] played last card
+				{
+					System.out.printf("Player %d wins!\n",player[index].getPnum());
+					console.append("Player " + player[index].getPnum() + " wins!\n");
+					return;
+				}
+				else{
+					index = NextTurn(index);
+					refreshHand();	//refresh the handpanel to reflect the next player's cards
+				}
+			changeDiscardTop(played);		//update the top card Component
 			}
 		}
 	}	
