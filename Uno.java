@@ -24,7 +24,8 @@ public class Uno extends JFrame
 	private static boolean hasdrawtwo=false; //for stackable draw 2s
 	private static int numdrawtwos = 0;		//for Draw2's method
 	private static boolean IsFirstLeading = true;
-
+	private static boolean IsUno = false;		//to call uno
+	private static boolean CallOPUno = false;	//to call if other player didnt say uno
 
 	public static void main(String[] args)
 	{
@@ -336,6 +337,8 @@ public class Uno extends JFrame
 		JLabel playerLabel;
 		PlayerPanel playerpanel;	//holds player label and draw button
 		JButton drawButton;
+		JButton unoButton;
+		JButton callButton;
 
 		public HandPanel(ArrayList<CardPane> h)
 		{
@@ -370,23 +373,43 @@ public class Uno extends JFrame
 				drawButton = new JButton("Draw Card");
 				drawButton.addActionListener(this);
 				add(drawButton);
-				//				eventButton = new JButton("Event"); //we can use this for Uno 
-				//				eventButtton.addActionListener(new ActionListener(){
-				//				public void actionPerformed(ActionEvent e)
-
-
-
-
-
-				//				}
+				unoButton = new JButton("Uno"); //we can use this for Uno 
+				unoButton.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e)
+						{
+							if(player[index].NumCardsInHand() <= 2)
+							{	
+								for(int i = 0; i < player[index].NumCardsInHand(); i++)
+								{
+									if(isDiscardable(leading, player[index].getCard(i)))
+									{
+										player[index].setHasUno(true);
+										console.append(">Player " + player[index].getPnum() + "says Uno!"); 
+										numconsolemsg++; 
+										break;
+									}
+								}
+							}
+						}
+						});
+				add(unoButton);
+				callButton = new JButton("Call"); //we can use this for Uno 
+				callButton.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e)
+						{
+							
+							CallOPUno =  true;						
+						}
+						});
+				add(callButton);
 			}
 
 			public void actionPerformed(ActionEvent event)
 			{
-				DrawUntilPlayable(player[index], d, leading);	//draw cards
+			DrawUntilPlayable(player[index], d, leading);	//draw cards
 
-				//refresh the hand
-				refreshHand();
+			//refresh the hand
+			refreshHand();
 			}
 		}
 
@@ -398,7 +421,7 @@ public class Uno extends JFrame
 				//downcasts component clicked to a CardPane
 				Card played = clicked.getCard(); 	//cardpane clicked converted to card object
 				int choice = player[index].findCardIndex(played);
-				
+
 				if(leading.getType() == TypeOfCard.DRAW2) //*maybe delete
 				{ 
 					for(int i = 0; i<player[index].NumCardsInHand(); i++)
@@ -426,7 +449,7 @@ public class Uno extends JFrame
 				{
 					player[index].Discard(d, choice);
 					index = Skip(index);
-					
+
 					numconsolemsg++;
 				}
 				else if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block

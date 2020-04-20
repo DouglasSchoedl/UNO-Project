@@ -9,7 +9,7 @@ public abstract class Player
 {
 	protected int Pnum; 		//player number
 	protected List<Card> Hand = new ArrayList<Card>();		//player hand
-
+	protected HasUno = false;
 
 	//Initalizing players hand will take place in the game
 	public Player(int pnum)
@@ -72,7 +72,7 @@ public abstract class Player
 	//deals 7 cards to player to populate their hand with cards
 	public void dealCards(Deck D)
 	{
-		for(int i = 0; i < 7; i++)
+		for(int i = 0; i < 3; i++)
 		{
 			TakeCard(D);
 		}
@@ -91,8 +91,15 @@ public abstract class Player
 		return index;
 	}
 
-
-
+	public boolean showHasUno()
+	{
+		return HasUno;
+	}
+	
+	public void setHasUno(boolean b)
+	{
+		HasUno = b;
+	}
 
 
 
