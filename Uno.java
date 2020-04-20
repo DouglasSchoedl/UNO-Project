@@ -19,11 +19,12 @@ public class Uno extends JFrame
 	private static Card leading; //Top of discard pile
 	private static Uno frame;
 	private static int index;	//index is current player
-	private static Card Wtemp;	//temp for wild card color choice
+	//private static Card Wtemp;	//temp for wild card color choice
 	private static int numconsolemsg = 0; //number of console mesages (for clearing up console)
 	private static boolean hasdrawtwo=false; //for stackable draw 2s
 	private static int numdrawtwos = 0;		//for Draw2's method
 	private static boolean IsFirstLeading = true;
+	private static WildFrame wildframe;
 
 
 	public static void main(String[] args)
@@ -216,48 +217,6 @@ public class Uno extends JFrame
 	//  }
 
 
-	/* Commenting out Wild logic for now since just so it compiles. will have to add some UI elements for selecting 
-	 * desired color later
-	//-----------------------------------------------------------------------------
-	public static Card Wild(Scanner sc, TypeOfCard t)
-	{
-	Card temp = null;
-	int i;
-	System.out.println("Choose Color: 0=Red, 1=Yellow, 2=Green, 3=Blue.");
-	while(true)
-	{
-	i = sc.nextInt();
-	if(i<4 & i>=0)
-	break;
-	else
-	{
-	System.out.println("Not Valid Choice.");
-	System.out.println("Choose Color: 0=Red, 1=Yellow, 2=Green, 3=Blue.");
-	}
-	}
-	switch(i)
-	{
-	case 0: temp = new Card(Suit.RED, t); break;
-	case 1: temp = new Card(Suit.YELLOW, t); break;
-	case 2: temp = new Card(Suit.GREEN, t); break;
-	case 3: temp = new Card(Suit.BLUE, t); break;
-	}
-	return temp;
-	}
-
-
-	//-----------------------------------------------------------------------------
-	public static Card WildDrawFour(Scanner sc, Player p, Deck D)
-	{
-	Card temp = Wild(sc, TypeOfCard.DRAW4WILD);
-	DrawTwos(p,D,2);
-	return temp;
-	}
-	*/
-
-
-
-
 	//-----------------------------------------------------------------------------
 	//Have to add wait functionallity to allow for multiple drawtwo's
 	public static void DrawTwo(Player p, Deck D)
@@ -421,6 +380,19 @@ public class Uno extends JFrame
 					numconsolemsg++;
 					return;
 				}
+				
+				if(played.getSuit() == Suit.WILD)	//replaces the player's hand with color select
+				{
+					wildframe = new WildFrame();
+				}
+
+				if(played.getType() == TypeOfCard.DRAW4WILD)
+				{
+					if(index == PSIZE-1)
+						DrawTwos(player[0],d,2);
+					else
+						DrawTwos(player[index+1],d,2);
+				}
 
 				if(player[index].getCard(choice).getType() == TypeOfCard.SKIP)
 				{
@@ -501,6 +473,14 @@ public class Uno extends JFrame
 				else if(hasdrawtwo){
 					refreshHand();	//refresh the handpanel to reflect the next player's cards
 				}
+				else if(played.getType() == TypeOfCard.DRAW4WILD)
+				{
+					refreshHand();	//refreshing here to reflect that we played the draw4
+					index = NextTurn(index);
+				}
+				else if(played.getSuit() == Suit.WILD){
+					refreshHand();	//refreshing here to reflect that we played the wild
+				}
 				else{
 					index = NextTurn(index);
 					refreshHand();	//refresh the handpanel to reflect the next player's cards
@@ -509,4 +489,56 @@ public class Uno extends JFrame
 			}
 		}
 	}	
+	class WildFrame extends JFrame
+	{
+		ArrayList<JLabel> colors; //stores array of color Labels
+
+		public WildFrame()
+		{
+			super("Set the color");
+			setLayout(new GridLayout(2,2));
+			setSize(200, 200);
+			setVisible(true);
+
+			colors = new ArrayList<JLabel>();
+			
+			for(Suit i : Suit.values())	//add labels to the array
+			{
+				if(i == Suit.WILD)	//we dont want to let them select the wild suit, only the colors
+					break;
+				JLabel colorlabel = new JLabel();
+				ImageIcon icon = new ImageIcon(getClass().getResource("images/" + i.name() + ".png"));
+				icon.setDescription(i.name());		//setting description for finding out which color clicked in mouseadapter
+				colorlabel.setIcon(icon);
+				colorlabel.setHorizontalAlignment(SwingConstants.CENTER);
+				colors.add(colorlabel);
+			}
+
+			for(int i = 0; i < 4; i++)
+			{
+				add(colors.get(i));	//add the labels to the frame.
+				colors.get(i).addMouseListener(new MouseClickHandler());
+			}
+		}
+
+		private class MouseClickHandler extends MouseAdapter
+		{
+			public void mouseClicked(MouseEvent event)
+			{
+				JLabel clicked = (JLabel)(event.getComponent());	
+				//downcasts component clicked to a JLabel
+				String color = ( (ImageIcon)(clicked.getIcon()) ).getDescription();
+
+				//sets the leading card internally, but does not change the icon
+				leading = new Card(Suit.valueOf(color), leading.getType());
+				console.append(">New color is " + color + "!\n");
+				numconsolemsg++;
+				setVisible(false);
+
+				//after color is selected, switch to next player
+				index = NextTurn(index);
+				refreshHand();
+			}
+		}
+	}
 }
