@@ -9,7 +9,7 @@ public abstract class Player
 {
 	protected int Pnum; 		//player number
 	protected List<Card> Hand = new ArrayList<Card>();		//player hand
-	protected HasUno = false;
+	protected boolean HasUno = false;
 
 	//Initalizing players hand will take place in the game
 	public Player(int pnum)
