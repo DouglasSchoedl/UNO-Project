@@ -309,6 +309,9 @@ public class Uno extends JFrame
 			cardgrid.setLayout(new GridLayout(1,1));		//set cardgrid layout to gridlayout
 			cardgrid.setBorder(BorderFactory.createLoweredBevelBorder());	//border around cards
 
+			cardgrid.add(Box.createRigidArea(new Dimension(1,144)));
+			//adding padding to make the cardgrid big enough
+	
 			playerpanel = new PlayerPanel();
 
 			for(int i = 0; i < hand.size(); i++)
@@ -318,6 +321,9 @@ public class Uno extends JFrame
 			}
 			add(cardgrid);
 			add(playerpanel, BorderLayout.NORTH);
+			
+			cardgrid.add(Box.createRigidArea(new Dimension(1,144)));
+			//adding padding to make the cardgrid big enough
 		}
 
 		private class PlayerPanel extends JPanel implements ActionListener
