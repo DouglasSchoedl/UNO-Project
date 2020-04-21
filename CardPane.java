@@ -25,7 +25,7 @@ class CardPane extends JPanel
 		card = c;
 		cardFileName = card.getSuit().toString() + card.getType().toString() + ".png";
 
-		cardicon = new ImageIcon(getClass().getResource("images/" + cardFileName));
+		cardicon = new ImageIcon(getClass().getResource("IMAGES/" + cardFileName));
 	}
 	
 	protected void paintComponent(Graphics g) {
