@@ -5,11 +5,11 @@ import java.util.ArrayList;
 //4 player game max
 //Start with 7 cards in hand each player has a hand
 
-public abstract class Player
+public class Player
 {
-	protected int Pnum; 		//player number
-	protected List<Card> Hand = new ArrayList<Card>();		//player hand
-	protected boolean HasUno = false;
+	private int Pnum; 		//player number
+	private List<Card> Hand = new ArrayList<Card>();		//player hand
+	private boolean HasUno = false;
 
 	//Initalizing players hand will take place in the game
 	public Player(int pnum)
@@ -53,12 +53,12 @@ public abstract class Player
 
 
 	//utilizes comparable in class Card and Collections list sort
-	protected void SortHand()
+	private void SortHand()
 	{
 		Collections.sort(Hand, new CardSort());
 	}
 
-	protected int getPnum()
+	public int getPnum()
 	{	
 		return Pnum; 
 	}
@@ -72,7 +72,7 @@ public abstract class Player
 	//deals 7 cards to player to populate their hand with cards
 	public void dealCards(Deck D)
 	{
-		for(int i = 0; i < 3; i++)
+		for(int i = 0; i < 7; i++)
 		{
 			TakeCard(D);
 		}

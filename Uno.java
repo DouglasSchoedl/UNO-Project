@@ -14,8 +14,8 @@ public class Uno extends JFrame
 	protected static JTextArea console;
 
 	private static Deck d;
-	private static int PSIZE = 3;	
-	private static Player [] player = new Player[PSIZE];
+	private static int PSIZE = 2;	
+	private static Player [] player;
 	private static Card leading; //Top of discard pile
 	private static Uno frame;
 	private static int index;	//index is current player
@@ -29,13 +29,32 @@ public class Uno extends JFrame
 
 	public static void main(String[] args)
 	{
+
+		if(args.length > 1)
+		{
+			System.out.println("Usage: java -jar hwx.jar [Number of Players]\nExample: java -jar hwx.jar 3");
+			System.exit(0);
+		}
+		else if(args.length == 1)
+		{
+			if(args[0].equals("4"))
+				PSIZE = 4;
+			else if(args[0].equals("3"))
+				PSIZE = 3;
+			else if(args[0].equals('2'));
+			else
+				System.out.println("Defaulted players to 2\n");
+		}
+
+		player = new Player[PSIZE];
+
 		//Creating Deck of cards and the two players
 		d = new Deck();
 		index = 0;	//start with player 0
 
 		for(int i=0; i<PSIZE; i++)
 		{
-			player[i] = new HumanPlayer(i+1);
+			player[i] = new Player(i+1);
 			player[i].dealCards(d);
 		}
 
@@ -311,7 +330,7 @@ public class Uno extends JFrame
 
 			cardgrid.add(Box.createRigidArea(new Dimension(1,144)));
 			//adding padding to make the cardgrid big enough
-	
+
 			playerpanel = new PlayerPanel();
 
 			for(int i = 0; i < hand.size(); i++)
@@ -321,7 +340,7 @@ public class Uno extends JFrame
 			}
 			add(cardgrid);
 			add(playerpanel, BorderLayout.NORTH);
-			
+
 			cardgrid.add(Box.createRigidArea(new Dimension(1,144)));
 			//adding padding to make the cardgrid big enough
 		}
@@ -546,7 +565,7 @@ public class Uno extends JFrame
 				if(i == Suit.WILD)	//we dont want to let them select the wild suit, only the colors
 					break;
 				JLabel colorlabel = new JLabel();
-				ImageIcon icon = new ImageIcon(getClass().getResource("images/" + i.name() + ".png"));
+				ImageIcon icon = new ImageIcon(getClass().getResource("IMAGES/" + i.name() + ".png"));
 				icon.setDescription(i.name());		//setting description for finding out which color clicked in mouseadapter
 				colorlabel.setIcon(icon);
 				colorlabel.setHorizontalAlignment(SwingConstants.CENTER);
