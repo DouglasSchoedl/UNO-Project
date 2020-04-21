@@ -24,7 +24,6 @@ public class Uno extends JFrame
 	private static boolean hasdrawtwo=false; //for stackable draw 2s
 	private static int numdrawtwos = 0;		//for Draw2's method
 	private static boolean IsFirstLeading = true;
-	private static boolean CallOPUno = false;	//to call if other player didnt say uno
 	private static WildFrame wildframe;
 
 
@@ -81,25 +80,6 @@ public class Uno extends JFrame
 	}
 
 
-	public static void FirstLeading()
-	{
-		//for Skip, Reverse, and Draw2 first leading card
-		if(leading.getType() == TypeOfCard.SKIP)
-		{
-			index = NextTurn(index); //sorted out bug this is needed for first leading card
-		}
-		else if(leading.getType() == TypeOfCard.REVERSE)
-		{
-			Reverse(index);
-		}
-		else if(leading.getType() == TypeOfCard.DRAW2) //no stacking draw2's for first card
-		{
-			DrawTwo(player[index], d);
-			index = NextTurn(index);
-		}
-	}
-
-
 	//-----------------------------------------------------------------------------
 	public Uno(Card top)	//top is the top card in discard stack
 	{
@@ -118,6 +98,28 @@ public class Uno extends JFrame
 		console.setWrapStyleWord(true);
 		add(console, BorderLayout.EAST);
 	}
+
+
+	//----------------------------------------------------------------------------
+
+	public static void FirstLeading()
+	{
+		//for Skip, Reverse, and Draw2 first leading card
+		if(leading.getType() == TypeOfCard.SKIP)
+		{
+			index = NextTurn(index); //sorted out bug this is needed for first leading card
+		}
+		else if(leading.getType() == TypeOfCard.REVERSE)
+		{
+			Reverse(index);
+		}
+		else if(leading.getType() == TypeOfCard.DRAW2) //no stacking draw2's for first card
+		{
+			DrawTwo(player[index], d);
+			index = NextTurn(index);
+		}
+	}
+
 
 	//-----------------------------------------------------------------------------
 	//helper function for turning a Card obj into a CardPane
@@ -205,25 +207,12 @@ public class Uno extends JFrame
 
 
 	//-----------------------------------------------------------------------------
-	//make this into a button that only appears at 2 cards
-	//When clicked returns value true
-	//	public static boolean SayUno(Scanner sc, Player p)
-	//	{
-	//	}
-
-
-	//Button given to other players if one player dosnt announce uno and has it
-	//	public static boolean CallNoUno();
-	//  {
-	//  }
-
-
-	//-----------------------------------------------------------------------------
 	//Have to add wait functionallity to allow for multiple drawtwo's
 	public static void DrawTwo(Player p, Deck D)
 	{
 		p.TakeCard(D);
 		p.TakeCard(D);
+		IsNotUno(p);
 	}
 	public static void DrawTwos(Player p, Deck D, int numdrawtwo)
 	{
@@ -283,8 +272,18 @@ public class Uno extends JFrame
 		while(!isDiscardable(leading, test))
 		{
 			test = p.TakeCard(D);
-		} 
+		}
+		IsNotUno(p);
 	}
+
+
+	//-----------------------------------------------------------------------------
+	public static void IsNotUno(Player p)
+	{
+		if(p.NumCardsInHand() >= 2 && p.showHasUno())
+			p.setHasUno(false);
+	}
+
 
 
 	//---------------------------------------------------------------------------------------------------------
@@ -343,7 +342,7 @@ public class Uno extends JFrame
 									if(isDiscardable(leading, player[index].getCard(i)))
 									{
 										player[index].setHasUno(true);
-										console.append(">Player " + player[index].getPnum() + "says Uno!"); 
+										console.append(">Player " + player[index].getPnum() + " says Uno!\n"); 
 										numconsolemsg++; 
 										break;
 									}
@@ -356,8 +355,21 @@ public class Uno extends JFrame
 				callButton.addActionListener(new ActionListener(){
 						public void actionPerformed(ActionEvent e)
 						{
-							
-							CallOPUno =  true;						
+							int temp = index;
+							index = NextTurn(index);
+							while(temp != index)
+							{
+								if(player[index].NumCardsInHand() == 1 && !player[index].showHasUno())
+								{
+									console.append(">Player " + player[index].getPnum() + " was caught for having but not saying Uno!\n");
+									console.append(">Because they were caught, player " + player[index].getPnum() + " had to draw 2\n");
+									numconsolemsg++;
+									numconsolemsg++;
+									DrawTwo(player[index],d);							
+								}
+								index = NextTurn(index);
+							}
+							index = temp;
 						}
 						});
 				add(callButton);
@@ -370,7 +382,7 @@ public class Uno extends JFrame
 			//refresh the hand
 			refreshHand();
 			}
-		}
+		}	
 
 		private class MouseClickHandler extends MouseAdapter
 		{
@@ -381,21 +393,11 @@ public class Uno extends JFrame
 				Card played = clicked.getCard(); 	//cardpane clicked converted to card object
 				int choice = player[index].findCardIndex(played);
 
-				if(leading.getType() == TypeOfCard.DRAW2) //*maybe delete
-				{ 
-					for(int i = 0; i<player[index].NumCardsInHand(); i++)
-					{
-						if(player[index].getCard(i).getType() == TypeOfCard.DRAW2)
-							hasdrawtwo = true;
-					}
-				}
-
 				if(numconsolemsg >5)
 				{
 					console.setText("");
 					numconsolemsg=0;
 				}
-
 
 				if(!isDiscardable(leading, played) && !hasdrawtwo)
 				{
@@ -404,34 +406,9 @@ public class Uno extends JFrame
 					return;
 				}
 				
-				if(played.getSuit() == Suit.WILD)	//replaces the player's hand with color select
-				{
-					wildframe = new WildFrame();
-				}
 
-				if(played.getType() == TypeOfCard.DRAW4WILD)
-				{
-					if(index == PSIZE-1)
-						DrawTwos(player[0],d,2);
-					else
-						DrawTwos(player[index+1],d,2);
-				}
-
-				if(player[index].getCard(choice).getType() == TypeOfCard.SKIP)
-				{
-					player[index].Discard(d, choice);
-					index = Skip(index);
-
-					numconsolemsg++;
-				}
-				else if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
-				{
-					player[index].Discard(d, choice);
-					Reverse(index);	
-					console.append(">Reversed!\n");
-					numconsolemsg++;
-				}		
-				else if(player[index].getCard(choice).getType() == TypeOfCard.DRAW2 || hasdrawtwo) //Draw2 Block
+				//since draw 2 is stackable it has the highest priority
+				if(player[index].getCard(choice).getType() == TypeOfCard.DRAW2 || hasdrawtwo) //Draw2 Block
 				{	
 					//stacking block
 					if(hasdrawtwo && player[index].getCard(choice).getType() == TypeOfCard.DRAW2)
@@ -485,12 +462,44 @@ public class Uno extends JFrame
 						numdrawtwos = 0;
 					}
 				}
+				else if(player[index].getCard(choice).getType() == TypeOfCard.SKIP)
+				{
+					player[index].Discard(d, choice);
+					index = Skip(index);
+
+					numconsolemsg++;
+				}
+				else if(player[index].getCard(choice).getType() == TypeOfCard.REVERSE) //Reverse Block
+				{
+					player[index].Discard(d, choice);
+					Reverse(index);	
+					console.append(">Reversed!\n");
+					numconsolemsg++;
+				}
+				else if(played.getType() == TypeOfCard.SELECTCOLOR)	//replaces the player's hand with color select
+				{
+					wildframe = new WildFrame();
+					player[index].Discard(d, player[index].findCardIndex(played));
+				}
+				else if(played.getType() == TypeOfCard.DRAW4WILD)
+				{
+					wildframe = new WildFrame();
+					player[index].Discard(d, player[index].findCardIndex(played));
+					if(index == PSIZE-1)
+						DrawTwos(player[0],d,2);
+					else
+						DrawTwos(player[index+1],d,2);
+				}
 				else if(isDiscardable(leading, played))
 					player[index].Discard(d, player[index].findCardIndex(played));
 
+
+
+				//if you dont say uno and dont get caught you can still win!
 				if(player[index].NumCardsInHand() == 0)	//this triggers if player[i] played last card
 				{
 					console.append(">Player " + player[index].getPnum() + " wins!\n");
+					refreshHand();
 					return;
 				}
 				else if(hasdrawtwo){
@@ -508,6 +517,7 @@ public class Uno extends JFrame
 					index = NextTurn(index);
 					refreshHand();	//refresh the handpanel to reflect the next player's cards
 				}
+
 				changeDiscardTop(played);		//update the top card Component
 			}
 		}
