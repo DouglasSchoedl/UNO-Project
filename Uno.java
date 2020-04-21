@@ -536,7 +536,7 @@ public class Uno extends JFrame
 		{
 			super("Set the color");
 			setLayout(new GridLayout(2,2));
-			setSize(200, 200);
+			setSize(300, 320);
 			setVisible(true);
 
 			colors = new ArrayList<JLabel>();
