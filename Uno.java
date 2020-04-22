@@ -10,7 +10,7 @@ public class Uno extends JFrame
 {
 	protected static BorderLayout layout;
 	protected HandPanel hand;	//for displaying the cards in a player's hand
-	protected CardPane leadingPane;	//leading card in discard stack
+	protected CenterPane leadingPane;	//leading card in discard stack
 	protected static JTextArea console;
 
 	private static Deck d;
@@ -108,7 +108,8 @@ public class Uno extends JFrame
 
 		hand = new HandPanel(makeHand());
 		add(hand, BorderLayout.SOUTH);
-		leadingPane = makeCard(top);
+		leadingPane = new CenterPane(top);
+		leadingPane.setSize(new Dimension(96, 144));
 		add(leadingPane, BorderLayout.CENTER);
 		console = new JTextArea(30, 16);
 		console.setEditable(false);
@@ -118,6 +119,22 @@ public class Uno extends JFrame
 		add(console, BorderLayout.EAST);
 	}
 
+	//----------------------------------------------------------------------------
+	//Making the top card a little more centered
+	private class CenterPane extends JPanel
+	{
+		CardPane cardpane;
+		GridLayout layout;
+		CenterPane(Card c)
+		{
+			layout = new GridLayout(1, 3);
+			setLayout(layout);
+			cardpane = makeCard(c);
+			add(Box.createRigidArea(new Dimension(hand.getWidth(),50)));
+			add(cardpane);
+			add(Box.createRigidArea(new Dimension(hand.getWidth(),50)));
+		}
+	}
 
 	//----------------------------------------------------------------------------
 
@@ -181,7 +198,7 @@ public class Uno extends JFrame
 		leading = c;
 
 		remove(leadingPane);
-		leadingPane = makeCard(c);
+		leadingPane = new CenterPane(c);
 		add(leadingPane, BorderLayout.CENTER);
 		validate();	
 	}
@@ -407,7 +424,7 @@ public class Uno extends JFrame
 			//refresh the hand
 			refreshHand();
 			}
-		}	
+		}
 
 		private class MouseClickHandler extends MouseAdapter
 		{
@@ -525,6 +542,7 @@ public class Uno extends JFrame
 				{
 					console.append(">Player " + player[index].getPnum() + " wins!\n");
 					refreshHand();
+					changeDiscardTop(played);
 					return;
 				}
 				else if(hasdrawtwo){
