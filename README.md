@@ -21,7 +21,7 @@ Extra Features: Draw 2 stacking feature. Instead of playing a single draw 2, if 
 
 
 Split up of work:
-Jeffrey Knappman - Made card.java, deck.java, CardPane.java, made most of the gui.
+Jeffrey Knappman - Made card.java, deck.java, CardPane.java, made most of the GUI, adding some game logic, tweaked game logic to work with GUI. 
 
 
 Douglas Schoedl - Made player.java, most of the game logic in Uno.java, Draw 2 extra feature, some rework in deck.java involving turning deck into a stack, the Uno and Call Button logic and inclusion.
